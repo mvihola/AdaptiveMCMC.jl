@@ -105,8 +105,11 @@ function buildModel(x=0.0, y=1.0)
 end
 
 # Initial state vector (labelled with keys `s` and `m`)
-x0 = LVector(log_s=1.0, m=0.0)
-out = adaptive_rwm(x0, buildModel(3.3, 4.14), 1_000_000; thin=20)
+x0 = LVector(log_s=1.0, m=0.0); log_p = buildModel(3.3, 4.14)
+# Hint: If you do not have a good guess of the mode of log_p (which is
+# a good initial value for MCMC), you may use optimisation:
+#using Optim; o = optimize(x -> -log_p(x), x0); x0 = o.minimizer
+out = adaptive_rwm(x0, log_p, 1_000_000; thin=20)
 using StatsPlots # Assuming installed
 corrplot(out.X', labels=[keys(x0)...])
 ```
