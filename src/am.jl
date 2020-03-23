@@ -28,8 +28,8 @@ function AdaptiveMetropolis(x0::T,
                             FT <: AbstractFloat, T<:AbstractVector{FT}}
     d = length(x0)
     L = Cholesky(eye(FT,d), :L, 0)
-    AdaptiveMetropolis{d,FT,T,typeof(step),typeof(L)}(deepcopy(x0), L, sc,
-      deepcopy(x0), step)
+    AdaptiveMetropolis{d,FT,Vector{FT},typeof(step),typeof(L)}(
+    Vector{FT}(x0), L, sc, Vector{FT}(x0), step)
 end
 
 # Specialisation to StaticArrays
