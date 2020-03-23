@@ -143,11 +143,11 @@ function mySampler(log_p, n, x0)
         alpha = min(one(p_x), exp(p_y - p_x)) # The Metropolis acceptance probability
 
         if rand() <= alpha
+            p_x = p_y
 
             # This 'accepts', or interchanges r.x <-> r.y:
             # (NB: do not do r.x = r.y; these are (pointers to) vectors!)
             accept!(r)
-
         end
 
         # Do the adaptation update:
