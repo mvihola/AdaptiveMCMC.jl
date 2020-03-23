@@ -121,16 +121,15 @@ The package provides also simple building blocks which you can use within a 'cus
 ```julia
 using AdaptiveMCMC
 
-# Sampler in R^d: AdaptationType could be AdaptiveMetropolis,
-# AdaptiveScalingMetropolis, AdaptiveScalingWithinAdaptiveMetropolis
-# or RobustAdaptiveMetropolis
-function mySampler(log_p, n, x0, AdaptationType=AdaptiveMetropolis)
+# Sampler in R^d
+function mySampler(log_p, n, x0)
 
     # Initialise random walk sampler state: r.x current state, r.y proposal
     r = RWMState(x0)
 
-    # Initialise adaptation state (with default parameters)
-    s = AdaptationType(x0)
+    # Initialise Adaptive Metropolis state (with default parameters)
+    s = AdaptiveMetropolis(x0)
+    # Other adaptations are: AdaptiveMetropolis, AdaptiveScalingMetropolis, AdaptiveScalingWithinAdaptiveMetropolis, and RobustAdaptiveMetropolis
 
     X = zeros(eltype(x0), length(x0), n) # Allocate output storage
     p_x = log_p(r.x)                     # = log_p(x0); the initial log target
