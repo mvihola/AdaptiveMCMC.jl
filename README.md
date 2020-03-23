@@ -129,7 +129,8 @@ function mySampler(log_p, n, x0)
 
     # Initialise Adaptive Metropolis state (with default parameters)
     s = AdaptiveMetropolis(x0)
-    # Other adaptations are: AdaptiveMetropolis, AdaptiveScalingMetropolis, AdaptiveScalingWithinAdaptiveMetropolis, and RobustAdaptiveMetropolis
+    # Other adaptations are: AdaptiveScalingMetropolis,
+    # AdaptiveScalingWithinAdaptiveMetropolis, and RobustAdaptiveMetropolis
 
     X = zeros(eltype(x0), length(x0), n) # Allocate output storage
     p_x = log_p(r.x)                     # = log_p(x0); the initial log target
