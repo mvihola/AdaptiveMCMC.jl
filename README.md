@@ -13,7 +13,7 @@ The aim of the package is to provide a simple and modular general-purpose implem
 
 ```julia
 using Pkg
-Pkg.add(PackageSpec(url="https://github.com/mvihola/AdaptiveMCMC.jl.git"))
+Pkg.add("AdaptiveMCMC")
 ```
 
 ## Quick start
