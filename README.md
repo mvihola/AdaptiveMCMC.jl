@@ -169,7 +169,7 @@ X = mySampler(normal_log_p, 1_000_000, zeros(30))
 
 The algorithms implemented in the package are discussed in the following reference:
 
-* Vihola, M. (to appear). Ergonomic and reliable Bayesian inference with adaptive Markov chain Monte Carlo. In *Handbook of Computational Statistics and Data Science*, Wiley.
+* M. Vihola. Ergonomic and reliable Bayesian inference with adaptive Markov chain Monte Carlo. In W. W. Piegrorsch, R. Levine,  H. H. Zhang, and T. C. M. Lee, editors, *Handbook of Computational Statistics and Data Science*, Wiley, to appear.
 
 If you use the package, please cite this publication.
 
