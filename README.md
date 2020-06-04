@@ -9,6 +9,8 @@ This package provides implementations of some general-purpose random-walk based 
 
 The aim of the package is to provide a simple and modular general-purpose implementation, which may be easily used to sample from a log-target density, but also used in a variety of custom settings.
 
+See also [AdaptiveParticleMCMC.jl](https://github.com/mvihola/AdaptiveParticleMCMC.jl) which uses this package with [SequentialMonteCarlo.jl](https://github.com/awllee/SequentialMonteCarlo.jl) for adaptive particle MCMC.
+
 ## Getting the package
 
 ```julia
