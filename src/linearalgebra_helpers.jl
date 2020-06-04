@@ -16,13 +16,22 @@ eye(d) = eye(Float64, d)
     yT <: AbstractVector{FT}
     }
     n::Int64 = length(x)
-    @inbounds @simd for i = 1:n
-        u::FT = zero(FT)
-        for j = 1:i
-            #u += A[j,i]*x[j]
-            u += A[i,j]*x[j]
+    if (sc_y == zero(FT))
+        @inbounds @simd for i = 1:n
+            u::FT = zero(FT)
+            for j = 1:i
+                u += A[i,j]*x[j]
+            end
+            z[i] = sc*u
         end
-        z[i] = sc_y*y[i] + sc*u
+    else
+        @inbounds @simd for i = 1:n
+            u::FT = zero(FT)
+            for j = 1:i
+                u += A[i,j]*x[j]
+            end
+            z[i] = sc_y*y[i] + sc*u
+        end
     end
     nothing
 end

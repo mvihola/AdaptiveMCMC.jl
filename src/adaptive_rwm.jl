@@ -51,7 +51,8 @@ end
     draw!(r, s)
     p_y = log_p(r.y); p_pr_y = log_pr(r.y)
     dp = beta*(p_y - p.x) + p_pr_y - p.pr_x
-    alpha = min(one(FT), exp(dp))
+    #alpha = min(one(FT), exp(dp))
+    rxy = exp(dp); alpha = (rxy<one(FT)) ? rxy : one(FT) # This makes r=NaN -> alpha=1
     if rand(r.rng) <= alpha
         # Accept: interchange current/proposed states & log-target values
         accept!(r)
@@ -74,7 +75,8 @@ end
 
     # Acceptance probability:
     dp = (beta_ - beta) * (p.x - p_.x)
-    alpha = min(one(FT), exp(dp))
+    #alpha = min(one(FT), exp(dp))
+    rxy = exp(dp); alpha = (rxy<one(FT)) ? rxy : one(FT) # This makes r=NaN -> alpha=1
 
     # Accept swap:
     if rand(R[lev_].rng) <= alpha
