@@ -1,9 +1,11 @@
 # Very simple implementation of some adaptive MCMC algorithms.
 module AdaptiveMCMC
 
+import Base.get
+
 export adaptive_rwm, AdaptiveMetropolis, RobustAdaptiveMetropolis,
 AdaptiveScalingMetropolis, AdaptiveScalingWithinAdaptiveMetropolis,
-ConstantShape, AdaptState, RWMState,
+AdaptState, RWMState,
 draw!, accept!, adapt!, adapt_rb!,
 StepSize, PolynomialStepSize, RAMStepSize, get
 
