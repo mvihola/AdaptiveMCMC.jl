@@ -104,11 +104,11 @@ end
     X = Vector(undef, L)
     D = Vector(undef, L)
     # RWM states, adaptation states...
-    R = Vector{RWMState{d,FT,T,typeof(q),typeof(rng)}}(undef, L)
+    R = [RWMState(x0, rng, q) for i = 1:L]
     S = Vector(undef, L)
     P = Vector{PVals{FT}}(undef, L)
     for lev = 1:L
-        r = RWMState(x0, rng, q); R[lev] = r
+        r = R[lev]
         P[lev] = PVals(log_p(r.x), log_pr(r.x))
         # Initialise adaptation
         if typeof(algorithm) == Symbol

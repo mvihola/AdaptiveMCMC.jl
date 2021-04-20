@@ -27,7 +27,8 @@ accepted by calling `accept!(s).
 
 function RWMState(x0::AbstractVector{FT}, rng::AbstractRNG=Random.GLOBAL_RNG,
     q::Function=randn!) where {FT <: AbstractFloat}
-    RWMState{length(x0),FT,typeof(x0),typeof(q),typeof(rng)}(rng, q,  deepcopy(x0), deepcopy(x0), deepcopy(x0))
+    RWMState{length(x0),FT,typeof(similar(x0)),typeof(q),typeof(rng)}(rng,
+q,  similar(x0), similar(x0), similar(x0))
 end
 
 # Draw u from proposal
