@@ -24,11 +24,7 @@ end
 function init_sw_adapt(L::Int, alpha_opt::FT=0.234, sc=FT(1.0),
     gamma=FT(0.66)) where {FT <: AbstractFloat}
     step = PolynomialStepSize(gamma, FT(L-1))
-    Rhos = Vector{AdaptiveScalingMetropolis}(undef, L-1)
-    for i in 1:L-1
-        Rhos[i] = AdaptiveScalingMetropolis(alpha_opt, sc, step)
-    end
-    (Rhos...,)
+    [AdaptiveScalingMetropolis(alpha_opt, sc, step) for _ in 1:L-1]
 end
 
 # Update inverse temperatures based on adapted parameters
@@ -100,31 +96,25 @@ end
                            log_p, log_pr) where {FT <: AbstractFloat,
                            T <: AbstractVector{FT}}
     d = length(x0)
-    # Initialise output variables
-    X = Vector(undef, L)
-    D = Vector(undef, L)
     # RWM states, adaptation states...
     R = [RWMState(x0, rng, q) for i = 1:L]
-    S = Vector(undef, L)
     P = Vector{PVals{FT}}(undef, L)
     for lev = 1:L
         r = R[lev]
         P[lev] = PVals(log_p(r.x), log_pr(r.x))
-        # Initialise adaptation
-        if typeof(algorithm) == Symbol
-            S[lev] = init_rwm_adapt(algorithm, x0)
-        else
-            S[lev] = algorithm[lev]
-        end
-        if lev == 1 || all_levels
-            X[lev] = zeros(FT, d, nX)
-            D[lev] = zeros(FT, nX)
-        else
-            X[lev] = missing
-            D[lev] = missing
-        end
     end
-    (X...,), (D...,), R, (S...,), P
+    
+    # Initialise adaptation
+    if typeof(algorithm) == Symbol
+        S = [init_rwm_adapt(algorithm, x0) for _ in 1:L]
+    else
+        S = algorithm
+    end
+    l = all_levels ? L : 1
+    # Initialise output variables
+    X = [Matrix{FT}(undef, d, nX) for _ in 1:l]
+    D = [Vector{FT}(undef, nX) for _ in 1:l]
+    X, D, R, S, P
 end
 
 """
@@ -194,14 +184,30 @@ function adaptive_rwm(x0::T, log_p::Function, n::Int;
     nX = length(b:thin:n) # Number of output
     X, D, R, S, P = init_arwm(x0, algorithm, rng, q, L,
                               all_levels, nX, log_p, log_pr)
+
+
+    adaptive_rwm_(X, D, R, S, P, args, params, x0, log_p, n,
+        thin, b, fulladapt,
+        L, log_pr,
+        all_levels, acc_sw, swaps,
+        rng)
+end
+
+function adaptive_rwm_(X, D, R, S, P, args, params, x0::T, log_p::Function, n::Int,
+    thin::Int, b::Int, fulladapt::Bool,
+    L::Int, log_pr::Function,
+    all_levels::Bool, acc_sw::FT, swaps::Symbol,
+    rng::AbstractRNG) where {FT <: AbstractFloat,
+    T <: AbstractVector{FT}}
+
     # Acceptance statistics
-    accRWM = zeros(L)  # How many are accepted
-    accSW = zeros(L-1); nSW = zeros(L-1)
+    accRWM = zeros(Int, L)  # How many are accepted
+    accSW = zeros(Int, L-1); nSW = zeros(Int, L-1)
 
     # Shorthands for all levels, swap levels, stored levels
     allLevels = 1:L
     oddLevels = 1:2:L-1; evenLevels = 2:2:L-1
-    upSweep = 1:(L-1); downSweep = L-1:-1:1
+    upSweep = 1:1:(L-1); downSweep = L-1:-1:1
     if swaps == :single
         sc_sw = FT(L-1)
     elseif swaps == :randperm
@@ -215,7 +221,7 @@ function adaptive_rwm(x0::T, log_p::Function, n::Int;
     Rhos = init_sw_adapt(L, acc_sw, sc_sw)
 
     # Which ones are stored
-    storeLevels = all_levels ? (1:L) : [1]
+    storeLevels = all_levels ? (1:L) : (1:1)
 
     # Initialise inverse temperatures
     Betas = zeros(FT, L)
