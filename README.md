@@ -13,9 +13,15 @@ See also [AdaptiveParticleMCMC.jl](https://github.com/mvihola/AdaptiveParticleMC
 
 ## Getting the package
 
+To get the latest registered version:
 ```julia
 using Pkg
 Pkg.add("AdaptiveMCMC")
+```
+To install the latest development version:
+```julia
+using Pkg
+Pkg.add(url="https://github.com/mvihola/AdaptiveMCMC.jl")
 ```
 
 ## Quick start
@@ -171,9 +177,11 @@ X = mySampler(normal_log_p, 1_000_000, zeros(30))
 
 The algorithms implemented in the package are discussed in the following reference:
 
-* M. Vihola. Ergonomic and reliable Bayesian inference with adaptive Markov chain Monte Carlo. In W. W. Piegrorsch, R. Levine,  H. H. Zhang, and T. C. M. Lee, editors, *Handbook of Computational Statistics and Data Science*, Wiley, to appear. \
-(Electronic version available in Wiley StatsRef: <https://doi.org/10.1002/9781118445112.stat08286>)
+* M. Vihola. Ergonomic and reliable Bayesian inference with adaptive Markov chain Monte Carlo. In <i>Wiley StatsRef: Statistics Reference Online</i>, Davidian, M., Kenett, R.S., Longford, N.T., Molenberghs, G., Piegorsch, W.W., and Ruggeri, F. (eds.), Article No. stat08286, 2020.
+[doi.org/10.1002/9781118445112.stat08286](https://doi.org/10.1002/9781118445112.stat08286)
 
-If you use the package, please cite this publication.
+The above is also published as the following book chapter (which can also be cited):
+
+* M. Vihola. Bayesian inference with Adaptive Markov chain Monte Carlo. In <i>Computational Statistics in Data Science</i>, Piegorsch, W.W., Levine, R.A., Zhang, H.H., and Lee, T.C.M. (eds.), Chichester: John Wiley & Sons, ISBN: 978-1-119-56107-1, 2022.
 
 Details of the implementation, such as about arguments and options, there are help fields written to the functions, which you may access, for instance, by typing `? adaptive_mcmc` in the Julia REPL.
