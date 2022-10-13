@@ -8,7 +8,7 @@ struct RWMState{d,FT<:AbstractFloat, T <: AbstractVector{FT},
     y::T      # Proposal state
 end
 
-# Convenience constructors:
+
 """
     s = RWMState(x0, [rng, [q!]])
 
@@ -22,9 +22,8 @@ Constructor for RWMState (random walk Metropolis state).
 
 If `s` is `RWMState`, then `s.x` is the current state. New proposal
 may be drawn to `s.y` by calling `draw!`, and the proposal is
-accepted by calling `accept!(s).
+accepted by calling `accept!(s)`.
 """
-
 function RWMState(x0::AbstractVector{FT}, rng::AbstractRNG=Random.GLOBAL_RNG,
     q::Function=randn!) where {FT <: AbstractFloat}
     state = RWMState{length(x0),FT,typeof(similar(x0)),typeof(q),typeof(rng)}(rng, 

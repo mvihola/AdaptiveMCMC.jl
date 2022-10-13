@@ -22,7 +22,6 @@ Constructor for RobustAdaptiveMetropolis state.
 If `s` is `RWMState`, then proposal samples may be drawn calling
  `draw!(s, r)` and adaptation is performed with `adapt!(r, s, α)`.
 """
-
 function RobustAdaptiveMetropolis(x0::T, α_opt::FT=FT(0.234),
   step::StepSize=RAMStepSize(FT(0.66),length(x0))) where {
       FT <: AbstractFloat, T <: AbstractVector{FT}}
