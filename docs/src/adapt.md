@@ -13,7 +13,7 @@ Y_k = X_{k-1} + S_{k-1} U_k, \quad U_k \sim q,
 ```
 where $q$ is the 'prototype proposal' as discussed in [Random walk sampler state](@ref), and the form of the 'shape' matrix factor $S_{k-1}$ depends on the chosen adaptive algorithm.
 
-The `adapt!` method updates the adapted state, based on the state of the random walk sampler, and the acceptance probability of the step $\alpha$.
+The `adapt!` method updates the adapted state, based on the state of the random walk sampler. Some of the adaptation algorithms use the third argument of `adapt!`: the acceptance probability $\alpha\in[0,1]$.
 
 ## Adaptive Metropolis
 
@@ -37,7 +37,9 @@ The covariance matrix is estimated using the recursive Robbins-Monro stochastic 
 ```
 where $\gamma_k$ is one of the [Step sizes](@ref).
 
-In fact, the $\Sigma_k$ are not calculated as above, but their Cholesky factors are updated directly using rank-1 updates. This is more efficient, as calculating a Cholesky factor is $O(d^3)$ but rank-1 updates are $O(d^2)$. The empirical covariances $\Sigma_k$ converge to the true covariance of the target distribution (under technical conditions).
+In fact, the $\Sigma_k$ fators are not calculated directly as given above, but their Cholesky factors are updated sequentially, using rank-1 updates. This is more efficient, as calculating a full Cholesky factor is $O(d^3)$ but rank-1 updates are $O(d^2)$.
+
+The empirical covariances $\Sigma_k$ of the AM converge to the true target covariance (under technical conditions).
 
 ## Robust adaptive Metropolis
 
@@ -51,7 +53,9 @@ S_k S_k^T = S_{k-1} \bigg( I + \gamma_k (\alpha_k - \alpha_*) \frac{U_k U_k^T}{\
 ```
 where $\alpha_k$ is the acceptance probability of the move $X_{k-1} \to Y_k$, and $U_k$ is the 'prototype proposal' used when forming the proposal $Y_k$, and $\alpha_*\in(0,1)$ is the desired acceptance rate, defaulting to $0.234$.
 
-In the case of finite-variance elliptically symmetric target distribution (and technical conditions), the shape parameter $S_k$ converge to a Cholesky factor of a matrix which is proportional to the covariance. However, in general, the shapes of RAM and AM can differ.
+In the case of finite-variance elliptically symmetric target distribution (and technical conditions), the shape parameter $S_k$ converges to a Cholesky factor of a matrix which is proportional to the covariance. However, in general, the limiting shapes of the RAM and the AM can differ.
+
+The RAM seems to have empirical advantage over AM in certain cases, such as higher dimensions, but RAM is not directly applicable for instance with [Pseudo-marginal](https://en.wikipedia.org/wiki/Pseudo-marginal_Metropolis%E2%80%93Hastings_algorithm) algorithms.
 
 ## Adaptive scaling Metropolis
 
@@ -59,16 +63,41 @@ In the case of finite-variance elliptically symmetric target distribution (and t
 AdaptiveScalingMetropolis
 ```
 
+Adaptive scaling Metropolis (ASM) implements a version of adaptive scaling first suggested in the [Andrieu and Robert, 2001](https://crest.science/RePEc/wpstorage/2001-33.pdf) preprint, but the version implemented by `AdaptiveMCMC.jl` is due to [Andrieu and Thoms, 2008](https://doi.org/10.1007/s11222-008-9110-y) and [Atchadé and Fort, 2010](https://projecteuclid.org/euclid.bj/1265984706).
+
+In the ASM, the adaptation parameter $S_k$ is a scalar, and it has the following dynamic:
+```math
+\log S_k = \log S_{k-1}  + \gamma_k (\alpha_k - \alpha_*).
+```
+The update has similarities with RAM, which may be regarded as a multivariate generalisation of this rule.
+
 ## Adaptive scaling within adaptive Metropolis
 
 ```@docs
 AdaptiveScalingWithinAdaptiveMetropolis
 ```
+The adaptive scaling within adaptive Metropolis combines the AM and ASM, as suggested (at least) in 
+[Andrieu and Thoms, 2008](https://doi.org/10.1007/s11222-008-9110-y). That is:
+
+* The scaling $\theta_k$ is updated as in the ASM
+* The covariance $\Sigma_k$ is updated as in AM, with Cholesky factor $L_k$
+* The scaling parameter is both combined: $S_k = \theta_k L_k$
+
+This algorithm is often more robust than AM, but often outperformed by a simpler RAM.
 
 ## 'Rao-Blackwellised' update
 
-The states of `AdaptiveMetropolis` and `AdaptiveScalingWithingAdaptiveMetropolis` also support the alternative adaptation suggested by implemented by:
+The covariance states of `AdaptiveMetropolis` and `AdaptiveScalingWithingAdaptiveMetropolis` also support the alternative adaptation suggested in [Andrieu and Thoms, 2008](https://doi.org/10.1007/s11222-008-9110-y). The alternative update call is the following:
 
 ```@docs
 adapt_rb!
 ```
+
+This update is not based on new, accepted state, but involves a convex combination of the current and proposed states, weighted by the acceptance probability:
+```math
+\begin{aligned}
+\mu_k &= (1-\gamma_k)\mu_{k-1} + \gamma_k \big[(1-\alpha_k) X_{k-1} + \alpha_k Y_k\big], \\
+\Sigma_k &= (1-\gamma_k)\Sigma_{k-1} + \gamma_k \big[(1-\alpha_k)(X_{k-1} - \mu_{k-1})(X_{k-1} - \mu_{k-1})^T + \alpha_k (Y_{k} - \mu_{k-1})(Y_{k} - \mu_{k-1})^T\big].
+\end{aligned}
+```
+This update is 'Rao-Blackwellised' in the sense that it may be regarded as a conditional expectation of the AM adaptation rule, integrating the accept/reject decision. The Rao-Blackwellised rule can stabilise the covariance adaptation slightly.

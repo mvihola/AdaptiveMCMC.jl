@@ -57,8 +57,6 @@ There are a number of other optional keyword arguments, too:
 adaptive_rwm
 ```
 
-<!--The `adaptive_rwm` uses a [Random-walk sampler state](@ref) and an [Adaptation state](@ref) chosen based on the `algorithm` option.-->
-
 ## With adaptive parallel tempering
 
 If the keyword argument `L` is greater than one, then the adaptive parallel tempering algorithm (APT) of [Miasojedow, Moulines & Vihola (2013)](http://dx.doi.org/10.1080/10618600.2013.778779) is used. This can greatly improve mixing with multimodal distributions.
@@ -121,3 +119,60 @@ and the adaptation is similar to [Adaptive scaling Metropolis](@ref): if swap $x
 ```
 where $\alpha_k^{(\text{swap }i)}$ is the swap probability.
 
+## Using individual modules in a custom setting
+
+In many cases, the simple samplers provided by `adaptive_rwm` are not sufficient, but a custmised sampler is necessary. For instance:
+
+* Adaptative sampler is used only for certain parameters, whilst others are updated by another MCMC scheme, such as with Gibbs moves.
+* The sampler state is large, and simulations cannot be saved in memory.
+
+The package provides simple building blocks which allow such custom scenarios. Here is a simple example how the individual components can be used:
+
+```julia
+using AdaptiveMCMC
+
+# Sampler in R^d
+function mySampler(log_p, n, x0)
+
+    # Initialise random walk sampler state: r.x current state, r.y proposal
+    r = RWMState(x0)
+
+    # Initialise Adaptive Metropolis state (with default parameters)
+    s = AdaptiveMetropolis(x0)
+    # Other adaptations are: AdaptiveScalingMetropolis,
+    # AdaptiveScalingWithinAdaptiveMetropolis, and RobustAdaptiveMetropolis
+
+    X = zeros(eltype(x0), length(x0), n) # Allocate output storage
+    p_x = log_p(r.x)                     # = log_p(x0); the initial log target
+    for k = 1:n
+
+        # Draw new proposal r.x -> r.y:
+        draw!(r, s)
+
+        p_y = log_p(r.y)                      # Calculate log target at proposal
+        alpha = min(one(p_x), exp(p_y - p_x)) # The Metropolis acceptance probability
+
+        if rand() <= alpha
+            p_x = p_y
+
+            # This 'accepts', or interchanges r.x <-> r.y:
+            # (NB: do not do r.x = r.y; these are (pointers to) vectors!)
+            accept!(r)
+        end
+
+        # Do the adaptation update:
+        adapt!(s, r, alpha, k)
+
+        X[:,k] = r.x   # Save the current sample
+     end
+    X
+end
+
+# Standard normal target for testing
+normal_log_p(x) = -mapreduce(e->e*e, +, x)/2
+
+# Run 1M iterations of the sampler targetting 30d standard Normal:
+X = mySampler(normal_log_p, 1_000_000, zeros(30))
+```
+
+See [Random-walk sampler state](@ref) and [Adaptation state](@ref) for more details about these components.

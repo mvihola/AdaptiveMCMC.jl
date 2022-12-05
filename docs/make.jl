@@ -8,7 +8,7 @@ pages = [
     "Random walk sampler state" => "rwm.md",
     "Adaptation state" => "adapt.md",
     "Step sizes" => "step.md",
-    "Further examples" => "examples.md"
+#    "Further examples" => "examples.md"
     ],
 format = Documenter.HTML(prettyurls = false),
 )

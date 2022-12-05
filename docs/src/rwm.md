@@ -17,7 +17,7 @@ Y_k \sim X_{k-1} + C U_k, \quad U_k \sim q,
 ```
 where $q$ corresponds to the distribution `s.q!` simulates from. The increment vector $U_k$ is stored to an internal `s.u` (which is used by some of the adaptive algorithms), and the proposal $Y_k$ is stored to `s.y`.
 
-The factor $C$ can be a scalar, which controls the increment scale, or a scalar times Cholesky factor, which controls the shape of the increment distribution.
+The factor $C$ in the update is not part of the `RWMState` structure, but supplied as a parameter to the function `draw!`. It can be a scalar, which controls the increment scale, or a scalar times Cholesky factor, which controls the shape of the increment distribution.
 
 ```@docs
 draw!
@@ -29,7 +29,7 @@ Calling `draw(r::RWMState, s::AdaptState)`, where `s` is one of the [Adaptation 
 
 ## Accepting a proposal
 
-After `draw!`, the proposal `s.x` can be accessed (and for instance copied to storage), but should not be modified directly. Instead, the 'acceptance', which means that `s.y` will replace `s.x` should be done as follows:
+After `draw!`, the state `s.x` and the proposal `s.y` can be accessed (and for instance copied to storage), but should not be modified directly. Instead, the 'acceptance', which means that `s.y` will replace `s.x` should be done as follows:
 
 ```@docs
 accept!
