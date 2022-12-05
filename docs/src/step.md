@@ -16,7 +16,7 @@ PolynomialStepSize
 
 There is also a variant of the `PolynomialStepSize` for the RAM: 
 ```math
-   \gamma_k = \min\{1, d k^{-\eta}\},
+   \gamma_k = \min\{1/2, d k^{-\eta}\},
 ```
 where $d$ is the state dimension. The RAM step size can be constructed as follows:
 ```@docs
