@@ -138,6 +138,8 @@ including adaptive parallel tempering.
 - `b::Int`: Number of burn-in iterations (before starting to collect samples); default `n/5`
 - `thin::Int`: Thinning factor; only every `thin`:th sample is stored; default `1`
 - `fulladapt::Bool`: Whether to adapt after burn-in; default `true`
+- `Sp`: Saved adaptive state from output to restart MCMC; default `nothing`
+- `Rp`: Saved rng state from output to restart MCMC; default `nothing`
 - `rng::AbstractRNG`: Random number generator; default `Random.GLOBAL_RNG`
 - `q::Function`: Zero-mean symmetric proposal generator (with arguments `x` and `rng`);
    default `q=randn!(x, rng)`
@@ -169,7 +171,7 @@ c = Chains(o.X[1]', start=o.params.b, thin=o.params.thin); plot(c)
 """
 function adaptive_rwm(x0::T, log_p::Function, n::Int;
     algorithm::Union{Symbol,Vector{<:AdaptState}}=:ram,
-    thin::Int=1, b::Int=Int(floor(n/5)), fulladapt::Bool=true,
+    thin::Int=1, b::Int=Int(floor(n/5)), fulladapt::Bool=true, Sp=nothing, Rp=nothing,
     q::Function=randn!, L::Int=1, log_pr::Function = (x->zero(FT)),
     all_levels::Bool=false, acc_sw::FT = FT(0.234), swaps::Symbol = :single,
     rng::AbstractRNG=Random.GLOBAL_RNG) where {FT <: AbstractFloat,
@@ -185,6 +187,12 @@ function adaptive_rwm(x0::T, log_p::Function, n::Int;
     X, D, R, S, P = init_arwm(x0, algorithm, rng, q, L,
                               all_levels, nX, log_p, log_pr)
 
+    if Sp!=nothing
+        S=Sp
+    end
+    if Rp!=nothing
+        R=Rp
+    end
 
     adaptive_rwm_(X, D, R, S, P, args, params, x0, log_p, n,
         thin, b, fulladapt,
