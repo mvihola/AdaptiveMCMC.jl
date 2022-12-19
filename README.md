@@ -122,6 +122,23 @@ using StatsPlots # Assuming installed
 corrplot(out.X', labels=[keys(x0)...])
 ```
 
+## Restarting simulation
+
+Simulation can be restarted, or continued after one simulation. Here is an example:
+
+```julia
+using AdaptiveMCMC, Random
+log_p(x) = -.5*sum(x.^2)
+Random.seed!(12345)
+# Simulate 200 iterations first:
+out = adaptive_rwm(zeros(2), log_p, 200)
+# Simulate 100 iterations more:
+out2 = adaptive_rwm(out.X[:,end], log_p, 100; Sp=out.S, Rp=out.R, indp=200)
+# This results in exactly the same output as simulating 300 samples in one go:
+Random.seed!(12345)
+out2_ = adaptive_rwm(zeros(2), log_p, 300)
+```
+
 ## Custom sampler
 
 The package provides also simple building blocks which you can use within a 'custom' MCMC sampler. Here is an example:

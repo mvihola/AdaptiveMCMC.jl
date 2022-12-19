@@ -135,11 +135,12 @@ including adaptive parallel tempering.
   `:ram` (default), `:am`, `:asm`, `:aswam` and `:rwm`.
   (Alternatively, if algorithm is a vector of AdaptState, then this will be used as an
   initial state for adaptation.)
-- `b::Int`: Number of burn-in iterations (before starting to collect samples); default `n/5`
+- `b::Int`: Burn-in length: `b`:th sample is the first saved sample. Default `⌊n/5⌋`
 - `thin::Int`: Thinning factor; only every `thin`:th sample is stored; default `1`
 - `fulladapt::Bool`: Whether to adapt after burn-in; default `true`
 - `Sp`: Saved adaptive state from output to restart MCMC; default `nothing`
 - `Rp`: Saved rng state from output to restart MCMC; default `nothing`
+- 'indp`: Index of saved adaptive state to restart MCMC; default `0`
 - `rng::AbstractRNG`: Random number generator; default `Random.GLOBAL_RNG`
 - `q::Function`: Zero-mean symmetric proposal generator (with arguments `x` and `rng`);
    default `q=randn!(x, rng)`
@@ -171,7 +172,8 @@ c = Chains(o.X[1]', start=o.params.b, thin=o.params.thin); plot(c)
 """
 function adaptive_rwm(x0::T, log_p::Function, n::Int;
     algorithm::Union{Symbol,Vector{<:AdaptState}}=:ram,
-    thin::Int=1, b::Int=Int(floor(n/5)), fulladapt::Bool=true, Sp=nothing, Rp=nothing,
+    thin::Int=1, b::Int=max(1,Int(floor(n/5))), fulladapt::Bool=true, 
+    Sp=nothing, Rp=nothing, indp=nothing,
     q::Function=randn!, L::Int=1, log_pr::Function = (x->zero(FT)),
     all_levels::Bool=false, acc_sw::FT = FT(0.234), swaps::Symbol = :single,
     rng::AbstractRNG=Random.GLOBAL_RNG) where {FT <: AbstractFloat,
@@ -187,22 +189,29 @@ function adaptive_rwm(x0::T, log_p::Function, n::Int;
     X, D, R, S, P = init_arwm(x0, algorithm, rng, q, L,
                               all_levels, nX, log_p, log_pr)
 
-    if Sp!=nothing
-        S=Sp
+    # Restore adaptation & sampler states
+    if Sp != nothing
+        S = Sp
     end
-    if Rp!=nothing
-        R=Rp
+    if Rp != nothing
+        R = Rp
+    end
+    if indp == nothing
+        indp = 0
+        if Sp != nothing
+            warning("When you restart from a previous sampler state, please also supply the index of the sampler state `indp`. Otherwise, repeated restarts might lead to biased algorithm.")
+        end
     end
 
     adaptive_rwm_(X, D, R, S, P, args, params, x0, log_p, n,
-        thin, b, fulladapt,
+        thin, b, fulladapt, indp,
         L, log_pr,
         all_levels, acc_sw, swaps,
         rng)
 end
 
 function adaptive_rwm_(X, D, R, S, P, args, params, x0::T, log_p::Function, n::Int,
-    thin::Int, b::Int, fulladapt::Bool,
+    thin::Int, b::Int, fulladapt::Bool, indp::Int,
     L::Int, log_pr::Function,
     all_levels::Bool, acc_sw::FT, swaps::Symbol,
     rng::AbstractRNG) where {FT <: AbstractFloat,
@@ -236,10 +245,13 @@ function adaptive_rwm_(X, D, R, S, P, args, params, x0::T, log_p::Function, n::I
     rho2beta!(Betas, Rhos)
 
     for k = 1:n
+        # The 'real' index, to ensure valid adaptation with restarts
+        k_real = k + indp
+
         # Random walk moves:
         for lev = allLevels
             accRWM[lev] += arwm_step!(R[lev], S[lev], P[lev], Betas[lev],
-                                 log_p, log_pr, k, fulladapt || k <= b)
+                                 log_p, log_pr, k_real, fulladapt || k <= b)
         end
 
         # Swap move between random adjacent levels
@@ -248,10 +260,10 @@ function adaptive_rwm_(X, D, R, S, P, args, params, x0::T, log_p::Function, n::I
                 lev = rand(rng, upSweep);
                 nSW[lev] += 1
                 accSW[lev] += swap_step!(R, Rhos, P, Betas, lev, lev+1,
-                                      k/L, fulladapt || k <= b)
+                                      k_real/L, fulladapt || k <= b)
             else
                 if swaps == :nonrev
-                    if k % 2 == 1
+                    if k_real % 2 == 1
                         sweepLevels = oddLevels
                     else
                         sweepLevels = evenLevels
@@ -268,7 +280,7 @@ function adaptive_rwm_(X, D, R, S, P, args, params, x0::T, log_p::Function, n::I
                 for lev in sweepLevels
                     nSW[lev] += 1
                     accSW[lev] += swap_step!(R, Rhos, P, Betas, lev, lev+1,
-                                          k, fulladapt || k <= b)
+                                          k_real, fulladapt || k <= b)
                 end
             end
         end
