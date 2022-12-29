@@ -10,6 +10,6 @@ pages = [
     "Step sizes" => "step.md",
 #    "Further examples" => "examples.md"
     ],
-format = Documenter.HTML(prettyurls = false),
+#format = Documenter.HTML(prettyurls = false),
 )
 

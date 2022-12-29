@@ -119,6 +119,23 @@ and the adaptation is similar to [Adaptive scaling Metropolis](@ref): if swap $x
 ```
 where $\alpha_k^{(\text{swap }i)}$ is the swap probability.
 
+## Restarting simulation
+
+Simulation can be restarted, or continued after one simulation. Here is an example:
+
+```julia
+using AdaptiveMCMC, Random
+log_p(x) = -.5*sum(x.^2)
+Random.seed!(12345)
+# Simulate 200 iterations first:
+out = adaptive_rwm(zeros(2), log_p, 200)
+# Simulate 100 iterations more:
+out2 = adaptive_rwm(out.X[:,end], log_p, 100; Sp=out.S, Rp=out.R, indp=200)
+# This results in exactly the same output as simulating 300 samples in one go:
+Random.seed!(12345)
+out2_ = adaptive_rwm(zeros(2), log_p, 300)
+```
+
 ## Using individual modules in a custom setting
 
 In many cases, the simple samplers provided by `adaptive_rwm` are not sufficient, but a custmised sampler is necessary. For instance:

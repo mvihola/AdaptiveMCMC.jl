@@ -190,7 +190,12 @@ normal_log_p(x) = -mapreduce(e->e*e, +, x)/2
 X = mySampler(normal_log_p, 1_000_000, zeros(30))
 ```
 
-## More information & citations
+## More documentation
+
+See the more detailed [documentation](https://mvihola.github.io/docs/AdaptiveMCMC.jl/) 
+for more information regarding the implementation. The functions also have help fields, so for instance, `? adaptive_mcmc` in the Julia REPL gives a brief help of that function.
+
+## How to cite
 
 The algorithms implemented in the package are discussed in the following reference:
 
@@ -200,5 +205,3 @@ The algorithms implemented in the package are discussed in the following referen
 The above is also published as the following book chapter (which can also be cited):
 
 * M. Vihola. Bayesian inference with Adaptive Markov chain Monte Carlo. In <i>Computational Statistics in Data Science</i>, Piegorsch, W.W., Levine, R.A., Zhang, H.H., and Lee, T.C.M. (eds.), Chichester: John Wiley & Sons, ISBN: 978-1-119-56107-1, 2022.
-
-Details of the implementation, such as about arguments and options, there are help fields written to the functions, which you may access, for instance, by typing `? adaptive_mcmc` in the Julia REPL.
