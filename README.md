@@ -122,9 +122,11 @@ using StatsPlots # Assuming installed
 corrplot(out.X', labels=[keys(x0)...])
 ```
 
-## Restarting simulation
+## Resuming simulation
 
-Simulation can be restarted, or continued after one simulation. Here is an example:
+(This is available currently only in the development version!)
+
+Simulation can be resumed, or continued after one simulation. Here is an example:
 
 ```julia
 using AdaptiveMCMC, Random
