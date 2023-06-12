@@ -1,3 +1,5 @@
+[![documentation](https://img.shields.io/badge/documentation-blue.svg)](https://mvihola.github.io/docs/AdaptiveMCMC.jl/)
+
 # AdaptiveMCMC.jl
 
 This package provides implementations of some general-purpose random-walk based adaptive MCMC algorithms, including the following:
