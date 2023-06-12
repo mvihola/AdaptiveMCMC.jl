@@ -9,38 +9,57 @@ struct AdaptiveMetropolis{d, FT <: AbstractFloat, T <:
 end
 
 """
-    r = AdaptiveMetropolis(x0, [sc, [step]])
+    r = AdaptiveMetropolis(x0; kwargs)
+    r = AdaptiveMetropolis(x0, [scale, [step]])
 
 Constructor for AdaptiveMetropolis state.
 
 # Arguments
 - `x0`: The initial state vector
-- `sc`: Scaling parameter; default `2.38/sqrt(d)` where `d` is dimension.
+
+# Keyword arguments
+- `scale`: Scaling parameter; default `2.38/sqrt(d)` where `d` is dimension.
 - `step`: Step size object; default `PolynomialStepSize(1.0)`
+- `S_init`: Initial proposal shape Cholesky factor; default `identity_cholesky(x0)`
 
 If `s` is `RWMState`, then proposal samples may be drawn calling
  `draw!(s, r)` and adaptation is performed with `adapt!(r, s)` or
  `adapt_rb!(r, s, α)`.
 """
 function AdaptiveMetropolis(x0::T,
-                            sc::FT = FT(2.38/sqrt(length(x0))),
-                            step = PolynomialStepSize(one(FT))) where {
-                            FT <: AbstractFloat, T<:AbstractVector{FT}}
-    d = length(x0)
-    L = Cholesky(eye(FT,d), :L, 0)
-    AdaptiveMetropolis{d,FT,Vector{FT},typeof(step),typeof(L)}(
-    Vector{FT}(x0), L, sc, Vector{FT}(x0), step)
+  sc::FT = FT(2.38/sqrt(length(x0))),
+  step_ = PolynomialStepSize(one(FT)); 
+  scale = sc, 
+  step = step_,
+  S_init = identity_cholesky(x0)
+  ) where {FT <: AbstractFloat, T<:AbstractVector{FT}}
+
+  d = length(x0)
+  m = similar(x0)
+  dx = similar(x0)
+  AdaptiveMetropolis{d,FT,Vector{FT},typeof(step),typeof(S_init)}(
+    m, S_init, scale, dx, step)
 end
 
+#function AdaptiveMetropolis(x0::T,
+#                            sc::FT = FT(2.38/sqrt(length(x0))),
+#                            step = PolynomialStepSize(one(FT))) where {
+#                            FT <: AbstractFloat, T<:AbstractVector{FT}}
+#    d = length(x0)
+#    L = Cholesky(eye(FT,d), :L, 0)
+#    AdaptiveMetropolis{d,FT,Vector{FT},typeof(step),typeof(L)}(
+#    Vector{FT}(x0), L, sc, Vector{FT}(x0), step)
+#end
+
 # Specialisation to StaticArrays
-function AdaptiveMetropolis(x0::T,
-                            sc::FT = FT(2.38/sqrt(length(x0))),
-                            step = PolynomialStepSize(one(FT))) where {d,
-                            FT <: AbstractFloat, T<:StaticArray{Tuple{d}, FT}}
-    L = Cholesky(MMatrix{d,d}(eye(FT,d)), :L, 0)
-    AdaptiveMetropolis{d,FT,MVector{d,FT},typeof(step),typeof(L)}(
-      MVector{d,FT}(x0), L, sc, MVector{d,FT}(x0), step)
-end
+#function AdaptiveMetropolis(x0::T,
+#                            sc::FT = FT(2.38/sqrt(length(x0))),
+#                            step = PolynomialStepSize(one(FT))) where {d,
+#                            FT <: AbstractFloat, T<:StaticArray{Tuple{d}, FT}}
+#    L = Cholesky(MMatrix{d,d}(eye(FT,d)), :L, 0)
+#    AdaptiveMetropolis{d,FT,MVector{d,FT},typeof(step),typeof(L)}(
+#      MVector{d,FT}(x0), L, sc, MVector{d,FT}(x0), step)
+#end
 
 @inline adapt!(sa, sr, α, k) = adapt!(sa, sr, k)
 # Update function -- not yet implemented in the best possible way...

@@ -9,39 +9,58 @@ struct RobustAdaptiveMetropolis{d, FT<:AbstractFloat, T <:
 end
 
 """
-    r = RobustAdaptiveMetropolis(x0, [α_opt, [step]])
-
+    r = RobustAdaptiveMetropolis(x0; kwargs)
+    r = RobustAdaptiveMetropolis(x0, [acc_target, [step]])
+    
 Constructor for RobustAdaptiveMetropolis state.
 
 # Arguments
 - `x0`: The initial state vector
-- `α_opt`: Desired mean accept rate; default `0.234`.
+
+# Keyword arguments
+- `acc_target`: Desired mean accept rate; default `0.234`.
 - `step`: Step size object; default `RAMStepSize(0.66,d)` where
   `d` is state dimension.
+- `S_init`: Initial proposal shape Cholesky factor; default `identity_cholesky(x0)`
 
 If `s` is `RWMState`, then proposal samples may be drawn calling
  `draw!(s, r)` and adaptation is performed with `adapt!(r, s, α)`.
 """
-function RobustAdaptiveMetropolis(x0::T, α_opt::FT=FT(0.234),
-  step::StepSize=RAMStepSize(FT(0.66),length(x0))) where {
-      FT <: AbstractFloat, T <: AbstractVector{FT}}
+function RobustAdaptiveMetropolis(x0::T, 
+  α_opt::FT=FT(0.234),
+  step_::StepSize=RAMStepSize(FT(0.66),length(x0)); 
+  acc_target = α_opt, 
+  step = step_, 
+  S_init = identity_cholesky(x0)
+  ) where {FT <: AbstractFloat, T <: AbstractVector{FT}}
+
     d = length(x0)
-    L = Cholesky(eye(FT, d), :L, 0)
-    dx = zeros(FT, d)
-    n_u = zeros(FT, d)
-    RobustAdaptiveMetropolis{d,FT,typeof(dx),typeof(step),typeof(L)}(L,
-      α_opt, dx, n_u, step)
+    dx = similar(x0)
+    n_u = similar(x0)
+    RobustAdaptiveMetropolis{d,FT,typeof(dx),typeof(step),typeof(S_init)}(S_init,
+      acc_target, dx, n_u, step)
 end
 
-function RobustAdaptiveMetropolis(x0::T, α_opt::FT=FT(0.234),
-  step::StepSize=RAMStepSize(FT(0.66),d)) where {d,
-      FT <: AbstractFloat, T<:StaticArray{Tuple{d}, FT}}
-    L = Cholesky(MMatrix{d,d}(eye(FT, d)), :L, 0)
-    dx = zeros(MVector{d,FT})
-    n_u = zeros(MVector{d,FT})
-    RobustAdaptiveMetropolis{d,FT,typeof(dx),typeof(step),typeof(L)}(L,
-      α_opt, dx, n_u, step)
-end
+#function RobustAdaptiveMetropolis(x0::T, α_opt::FT=FT(0.234),
+#  step::StepSize=RAMStepSize(FT(0.66),length(x0))) where {
+#      FT <: AbstractFloat, T <: AbstractVector{FT}}
+#    d = length(x0)
+#    L = Cholesky(eye(FT, d), :L, 0)
+#    dx = zeros(FT, d)
+#    n_u = zeros(FT, d)
+#    RobustAdaptiveMetropolis{d,FT,typeof(dx),typeof(step),typeof(L)}(L,
+#      α_opt, dx, n_u, step)
+#end
+
+#function RobustAdaptiveMetropolis(x0::T, α_opt::FT=FT(0.234),
+#  step::StepSize=RAMStepSize(FT(0.66),d)) where {d,
+#      FT <: AbstractFloat, T<:StaticArray{Tuple{d}, FT}}
+#    L = Cholesky(MMatrix{d,d}(eye(FT, d)), :L, 0)
+#    dx = zeros(MVector{d,FT})
+#    n_u = zeros(MVector{d,FT})
+#    RobustAdaptiveMetropolis{d,FT,typeof(dx),typeof(step),typeof(L)}(L,
+#      α_opt, dx, n_u, step)
+#end
 
 @inline function adapt!(s::RobustAdaptiveMetropolis{d}, sr::RWMState{d},
       α::FT, k::Real) :: Nothing where {d, FT <: AbstractFloat}
