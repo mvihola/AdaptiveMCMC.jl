@@ -1,8 +1,20 @@
 import LinearAlgebra: lowrankupdate!, lowrankdowndate!
 
 # Matlab style identity matrix convenience function
-eye(FT, d) = diagm(0 => fill(one(FT),d))
+eye(FT, d) = Matrix{FT}(I, d, d) #diagm(0 => fill(one(FT),d))
 eye(d) = eye(Float64, d)
+
+
+# Default (identity) Cholesky factor
+function identity_cholesky(x0::AbstractVector)
+    d = length(x0)
+    FT = eltype(x0)
+    if typeof(x0) <: StaticArray
+        return Cholesky(MMatrix{d,d}(eye(FT, d)), :L, 0)
+    else
+        return Cholesky(eye(FT, d), :L, 0)
+    end
+end
 
 # Helper to calculate z = sc_y*y  + sc*A*x (in place), where A assumed
 # lower triangular. Argument y can be same as z.
