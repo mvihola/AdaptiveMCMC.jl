@@ -1,5 +1,4 @@
-struct AdaptiveMetropolis{d, FT <: AbstractFloat, T <:
-    Union{MVector{d,FT}, Vector{FT}}, SST <: StepSize,
+struct AdaptiveMetropolis{d, FT <: AbstractFloat, T <: AbstractVector{FT}, SST <: StepSize,
     CT <: Cholesky} <: AdaptState
     m::T
     L::CT
