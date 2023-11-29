@@ -154,6 +154,7 @@ including adaptive parallel tempering.
    `:sweep` (up- or downward sweep, picked at random)
    `:nonrev` (alternate even/odd sites as in Syed, Bouchard-Côté, Deligiannidis,
    Doucet, 	arXiv:1905.02939)
+- `verbose::Bool`: Whether to print progress; default `false`
 
 Note that if `log_pr` is supplied, then `log_p(x)` is regarded as the
 log-likelihood (or, equivalently, log-target is `log_p(x) + log_pr(x)`).
@@ -176,13 +177,13 @@ function adaptive_rwm(x0::T, log_p::Function, n::Int;
     Sp=nothing, Rp=nothing, indp=nothing,
     q::Function=randn!, L::Int=1, log_pr::Function = (x->zero(FT)),
     all_levels::Bool=false, acc_sw::FT = FT(0.234), swaps::Symbol = :single,
-    rng::AbstractRNG=Random.GLOBAL_RNG) where {FT <: AbstractFloat,
+    rng::AbstractRNG=Random.GLOBAL_RNG, verbose::Bool = false) where {FT <: AbstractFloat,
     T <: AbstractVector{FT}}
 
     args = (x0, log_p, n)
     params = (algorithm=algorithm, thin=thin, b=b, fulladapt=fulladapt,
               q=q, L=L, log_pr=log_pr, all_levels=all_levels, acc_sw=acc_sw,
-              swaps=swaps, rng=copy(rng))
+              swaps=swaps, rng=copy(rng), verbose=verbose)
 
     # Initialise key variables
     nX = length(b:thin:n) # Number of output
@@ -207,14 +208,14 @@ function adaptive_rwm(x0::T, log_p::Function, n::Int;
         thin, b, fulladapt, indp,
         L, log_pr,
         all_levels, acc_sw, swaps,
-        rng)
+        rng, verbose)
 end
 
 function adaptive_rwm_(X, D, R, S, P, args, params, x0::T, log_p::Function, n::Int,
     thin::Int, b::Int, fulladapt::Bool, indp::Int,
     L::Int, log_pr::Function,
     all_levels::Bool, acc_sw::FT, swaps::Symbol,
-    rng::AbstractRNG) where {FT <: AbstractFloat,
+    rng::AbstractRNG, verbose::Bool) where {FT <: AbstractFloat,
     T <: AbstractVector{FT}}
 
     # Acceptance statistics
@@ -243,6 +244,9 @@ function adaptive_rwm_(X, D, R, S, P, args, params, x0::T, log_p::Function, n::I
     # Initialise inverse temperatures
     Betas = zeros(FT, L)
     rho2beta!(Betas, Rhos)
+
+    #initialize time tracking
+    tStart = time(); strLen = 0
 
     for k = 1:n
         # The 'real' index, to ensure valid adaptation with restarts
@@ -291,6 +295,54 @@ function adaptive_rwm_(X, D, R, S, P, args, params, x0::T, log_p::Function, n::I
                 i = Int((k-b)/thin)+1
                 X[lev][:,i] .= R[lev].x
                 D[lev][i] = Betas[lev]*P[lev].x + P[lev].pr_x
+            end
+        end
+
+        #percent output tracker
+        if verbose
+            if k == 1
+                modelString = "["*" "^25 *"]"*" XX% complete -- "*"estimated 00:00:00 left"
+                strLen = length(modelString)
+            end
+            tNew = time()
+            if k % ceil(Int,n/100) == 0 #output every 1% of iterations
+                timeLeft = (tNew-tStart)*(n/k - 1) #( iterLeft / iterPerSec ) =  (n-k) / (k/(tNew-tStart)) = (tNew-tStart)*(n/k - 1)
+                hours = floor(Int,timeLeft/3600)
+                hours = hours < 10 ? "0$(hours)" : string(hours)
+                minutes = floor(Int,(timeLeft % 3600)/60)
+                minutes = minutes < 10 ? "0$(minutes)" : string(minutes)
+                seconds = round(Int,(timeLeft % 3600) % 60)
+                seconds = seconds < 10 ? "0$(seconds)" : string(seconds)
+                place = Int(ceil(100*k/n)) 
+                percent = place < 10 ? "0$(place)" : string(place)
+                place = ceil(Int,place/4) #scale bar to 25 characters to prevent overflow
+                progressBar = "["*"="^(place-1)*">"*" "^(25-place)*"]"
+                percentStr = "$(percent)% complete"
+                timeStr = parse(Int,hours) > 24 ? "> $(hours)" : "$(hours):$(minutes):$(seconds)"
+                str = progressBar * " " * percentStr * " — estimated " * timeStr * " left"
+                print("\r"*" "^strLen*"\r")
+                printstyled(split(progressBar,">")[1],color=:cyan)
+                printstyled(">",color=:magenta,blink=true,bold=true)
+                printstyled(split(progressBar,">")[2],color=:cyan)
+                print(" ")
+                printstyled("$(percent)%",color=:magenta,bold=true)
+                print(" complete — estimated ")
+                printstyled(timeStr,color=:red,bold=true)
+                print(" left")
+                flush(stdout)
+                strLen = length(str)
+            end
+            if k == n
+                print("\r"*" "^strLen*"\r")
+                progressBar = "["*"="^24*">"*"]"
+                printstyled(split(progressBar,">")[1],color=:cyan)
+                printstyled(">",color=:green,bold=true)
+                printstyled(split(progressBar,">")[2],color=:cyan)
+                print(" ")
+                printstyled("100% complete",color=:green,bold=true)
+                print(" — average of ")
+                printstyled("$(round((time()-tStart)/n,sigdigits=3))",color=:red,bold=true)
+                println(" seconds per iteration\n")
             end
         end
     end
