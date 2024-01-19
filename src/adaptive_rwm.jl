@@ -140,7 +140,7 @@ including adaptive parallel tempering.
 - `fulladapt::Bool`: Whether to adapt after burn-in; default `true`
 - `Sp`: Saved adaptive state from output to restart MCMC; default `nothing`
 - `Rp`: Saved rng state from output to restart MCMC; default `nothing`
-- 'indp`: Index of saved adaptive state to restart MCMC; default `0`
+- `indp::Int``: Index of saved adaptive state to restart MCMC; default `0`
 - `rng::AbstractRNG`: Random number generator; default `Random.GLOBAL_RNG`
 - `q::Function`: Zero-mean symmetric proposal generator (with arguments `x` and `rng`);
    default `q=randn!(x, rng)`
@@ -154,6 +154,7 @@ including adaptive parallel tempering.
    `:sweep` (up- or downward sweep, picked at random)
    `:nonrev` (alternate even/odd sites as in Syed, Bouchard-Côté, Deligiannidis,
    Doucet, 	arXiv:1905.02939)
+- `progress::Union{Bool,Progress}`: Whether a progress meter is shown; default `false`
 
 Note that if `log_pr` is supplied, then `log_p(x)` is regarded as the
 log-likelihood (or, equivalently, log-target is `log_p(x) + log_pr(x)`).
@@ -176,6 +177,7 @@ function adaptive_rwm(x0::T, log_p::Function, n::Int;
     Sp=nothing, Rp=nothing, indp=nothing,
     q::Function=randn!, L::Int=1, log_pr::Function = (x->zero(FT)),
     all_levels::Bool=false, acc_sw::FT = FT(0.234), swaps::Symbol = :single,
+    progress::Union{Bool,ProgressMeter.Progress} = false,
     rng::AbstractRNG=Random.GLOBAL_RNG) where {FT <: AbstractFloat,
     T <: AbstractVector{FT}}
 
@@ -203,10 +205,17 @@ function adaptive_rwm(x0::T, log_p::Function, n::Int;
         end
     end
 
+    if typeof(progress) == Bool
+        progressmeter = ProgressMeter.Progress(n; enabled=progress)
+    else
+        progressmeter = progress
+    end
+
     adaptive_rwm_(X, D, R, S, P, args, params, x0, log_p, n,
         thin, b, fulladapt, indp,
         L, log_pr,
         all_levels, acc_sw, swaps,
+        progressmeter,
         rng)
 end
 
@@ -214,6 +223,7 @@ function adaptive_rwm_(X, D, R, S, P, args, params, x0::T, log_p::Function, n::I
     thin::Int, b::Int, fulladapt::Bool, indp::Int,
     L::Int, log_pr::Function,
     all_levels::Bool, acc_sw::FT, swaps::Symbol,
+    progressmeter::ProgressMeter.Progress, 
     rng::AbstractRNG) where {FT <: AbstractFloat,
     T <: AbstractVector{FT}}
 
@@ -293,6 +303,8 @@ function adaptive_rwm_(X, D, R, S, P, args, params, x0::T, log_p::Function, n::I
                 D[lev][i] = Betas[lev]*P[lev].x + P[lev].pr_x
             end
         end
+
+        ProgressMeter.next!(progressmeter)
     end
 
     (X=X[1], allX=X, D=D, R=R, S=S, Rhos=Rhos, accRWM=accRWM/n, accSW=accSW./nSW,

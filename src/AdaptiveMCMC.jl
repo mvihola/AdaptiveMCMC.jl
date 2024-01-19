@@ -3,6 +3,8 @@ module AdaptiveMCMC
 
 import Base.get
 
+import ProgressMeter
+
 export adaptive_rwm, AdaptiveMetropolis, RobustAdaptiveMetropolis,
 AdaptiveScalingMetropolis, AdaptiveScalingWithinAdaptiveMetropolis,
 AdaptState, RWMState,

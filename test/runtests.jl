@@ -24,7 +24,7 @@ o_ram_32 = adaptive_rwm(Float32.(x0), log_p, n; algorithm=:ram)
 o_am = adaptive_rwm(x0, log_p, n; algorithm=:am)
 @test o_am.S[1].L.L[1] ≈ 1.0 atol=0.05
 @test test_stats(o_am.X)
-o_am_32 = adaptive_rwm(x0, log_p, n; algorithm=:am)
+o_am_32 = adaptive_rwm(Float32.(x0), log_p, n; algorithm=:am)
 @test o_am_32.S[1].L.L[1] ≈ 1.0 atol=0.05
 @test test_stats(o_am_32.X)
 
