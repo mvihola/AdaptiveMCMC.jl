@@ -140,7 +140,7 @@ including adaptive parallel tempering.
 - `fulladapt::Bool`: Whether to adapt after burn-in; default `true`
 - `Sp`: Saved adaptive state from output to restart MCMC; default `nothing`
 - `Rp`: Saved rng state from output to restart MCMC; default `nothing`
-- `indp::Int``: Index of saved adaptive state to restart MCMC; default `0`
+- `indp::Int`: Index of saved adaptive state to restart MCMC; default `0`
 - `rng::AbstractRNG`: Random number generator; default `Random.GLOBAL_RNG`
 - `q::Function`: Zero-mean symmetric proposal generator (with arguments `x` and `rng`);
    default `q=randn!(x, rng)`
