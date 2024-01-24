@@ -197,7 +197,7 @@ X = mySampler(normal_log_p, 1_000_000, zeros(30))
 ## More documentation
 
 See the more detailed [documentation](https://mvihola.github.io/docs/AdaptiveMCMC.jl/) 
-for more information regarding the implementation. The functions also have help fields, so for instance, `? adaptive_mcmc` in the Julia REPL gives a brief help of that function.
+for more information regarding the implementation. The functions also have help fields, so for instance, `? adaptive_rwm` in the Julia REPL gives a brief help of that function.
 
 ## How to cite
 
