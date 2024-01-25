@@ -132,7 +132,7 @@ including adaptive parallel tempering.
 
 # Keyword arguments
 - `algorithm::Symbol`: The random walk adaptation algorithm; current choices are
-  `:ram` (default), `:am`, `:asm`, `:aswam` and `:rwm`.
+  `:ram` (default), `:am`, `:asm` and `:aswam`.
   (Alternatively, if algorithm is a vector of AdaptState, then this will be used as an
   initial state for adaptation.)
 - `b::Int`: Burn-in length: `b`:th sample is the first saved sample. Default `⌊n/5⌋`
@@ -201,7 +201,7 @@ function adaptive_rwm(x0::T, log_p::Function, n::Int;
     if indp == nothing
         indp = 0
         if Sp != nothing
-            warning("When you restart from a previous sampler state, please also supply the index of the sampler state `indp`. Otherwise, repeated restarts might lead to biased algorithm.")
+            @warn "When you restart from a previous sampler state, please also supply the index of the sampler state `indp`. Otherwise, repeated restarts might lead to biased algorithm."
         end
     end
 
