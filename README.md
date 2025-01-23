@@ -206,6 +206,6 @@ The algorithms implemented in the package are discussed in the following referen
 * M. Vihola. Ergonomic and reliable Bayesian inference with adaptive Markov chain Monte Carlo. In <i>Wiley StatsRef: Statistics Reference Online</i>, Davidian, M., Kenett, R.S., Longford, N.T., Molenberghs, G., Piegorsch, W.W., and Ruggeri, F. (eds.), Article No. stat08286, 2020.
 [doi.org/10.1002/9781118445112.stat08286](https://doi.org/10.1002/9781118445112.stat08286)
 
-The above is also published as the following book chapter (which can also be cited):
+The Accepted version (Final draft) of the above can be downloaded from the [JYX Digital Repository](https://jyx.jyu.fi/handle/123456789/97466). The essentially same article is also published as the following book chapter (which can also be cited):
 
 * M. Vihola. Bayesian inference with Adaptive Markov chain Monte Carlo. In <i>Computational Statistics in Data Science</i>, Piegorsch, W.W., Levine, R.A., Zhang, H.H., and Lee, T.C.M. (eds.), Chichester: John Wiley & Sons, ISBN: 978-1-119-56107-1, 2022.
